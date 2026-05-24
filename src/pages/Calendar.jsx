@@ -14,17 +14,20 @@ function Calendar() {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-        const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+        const startOfNextMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
         
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from('scheduled_posts')
           .select('*')
           .eq('user_id', user.id)
           .gte('scheduled_date', startOfMonth.toISOString())
-          .lte('scheduled_date', endOfMonth.toISOString())
+          .lt('scheduled_date', startOfNextMonth.toISOString())
           .order('scheduled_date', { ascending: true });
         
-        if (data) {
+        if (error) {
+          console.error('Error fetching scheduled posts:', error);
+        } else if (data) {
+          console.log('Fetched scheduled posts:', data);
           setScheduledPosts(data);
         }
       }
@@ -59,10 +62,16 @@ function Calendar() {
 
   const getPostsForDay = (day) => {
     if (!day) return [];
-    return scheduledPosts.filter(post => {
+    const posts = scheduledPosts.filter(post => {
       const postDate = new Date(post.scheduled_date);
-      return postDate.toDateString() === day.toDateString();
+      const match = postDate.toDateString() === day.toDateString();
+      if (match) {
+        console.log('Matched post:', post, 'for day:', day);
+      }
+      return match;
     });
+    console.log('Posts for day', day, ':', posts);
+    return posts;
   };
 
   const getPlatformIcon = (platform) => {
