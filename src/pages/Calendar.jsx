@@ -12,9 +12,17 @@ function Calendar() {
     const fetchScheduledPosts = async () => {
       setLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
+      console.log('User:', user);
+      
       if (user) {
         const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
         const startOfNextMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
+        
+        console.log('Fetching posts for date range:', {
+          start: startOfMonth.toISOString(),
+          end: startOfNextMonth.toISOString(),
+          userId: user.id
+        });
         
         const { data, error } = await supabase
           .from('scheduled_posts')
@@ -24,12 +32,20 @@ function Calendar() {
           .lt('scheduled_date', startOfNextMonth.toISOString())
           .order('scheduled_date', { ascending: true });
         
+        console.log('Supabase response:', { data, error });
+        
         if (error) {
           console.error('Error fetching scheduled posts:', error);
-        } else if (data) {
-          console.log('Fetched scheduled posts:', data);
-          setScheduledPosts(data);
+        } else {
+          console.log('Fetched scheduled posts count:', data?.length || 0);
+          if (data && data.length > 0) {
+            console.log('First post:', data[0]);
+          }
+          setScheduledPosts(data || []);
         }
+      } else {
+        console.log('No user found');
+        setScheduledPosts([]);
       }
       setLoading(false);
     };
