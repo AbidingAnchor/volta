@@ -66,20 +66,25 @@ function Dashboard() {
     setOutputs({ twitter: '', linkedin: '', instagram: '', facebook: '', email: '' });
 
     try {
-      console.log('API Key:', process.env.REACT_APP_GROQ_API_KEY);
-      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.REACT_APP_GROQ_API_KEY}`
-        },
-        body: JSON.stringify({
-          model: 'llama-3.3-70b-versatile',
-          messages: [
-            {
-              role: 'system',
-              content: `You are an expert content repurposing AI. Given a blog post or article, generate 5 different social media formats. Write all content in a ${selectedTone} tone.${brandVoice ? ` Match the writing style and tone of these examples: ${brandVoice}` : ''}
-              
+      const isDev = process.env.NODE_ENV === 'development';
+      let data;
+
+      if (isDev) {
+        // Development: Call Groq directly
+        console.log('API Key:', process.env.REACT_APP_GROQ_API_KEY);
+        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${process.env.REACT_APP_GROQ_API_KEY}`
+          },
+          body: JSON.stringify({
+            model: 'llama-3.3-70b-versatile',
+            messages: [
+              {
+                role: 'system',
+                content: `You are an expert content repurposing AI. Given a blog post or article, generate 5 different social media formats. Write all content in a ${selectedTone} tone.${brandVoice ? ` Match the writing style and tone of these examples: ${brandVoice}` : ''}
+                
 1. Twitter/X thread: Exactly 5 tweets, each under 280 characters. Format as "Tweet 1: [content]\\nTweet 2: [content]\\nTweet 3: [content]\\nTweet 4: [content]\\nTweet 5: [content]"
 2. LinkedIn post: Professional, engaging post with 2-3 paragraphs, include relevant hashtags
 3. Instagram caption: Engaging caption with emojis, 1-2 paragraphs, include relevant hashtags
@@ -94,54 +99,94 @@ Return the response in this exact JSON format:
   "facebook": "...",
   "email": "..."
 }`
-            },
-            {
-              role: 'user',
-              content: inputText
-            }
-          ],
-          temperature: 0.7,
-          max_tokens: 2000
-        })
-      });
+              },
+              {
+                role: 'user',
+                content: inputText
+              }
+            ],
+            temperature: 0.7,
+            max_tokens: 2000
+          })
+        });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to generate content');
-      }
-
-      if (data.choices && data.choices[0]) {
-        const content = data.choices[0].message.content;
-        console.log('Raw AI response:', content);
-        
-        let finalOutputs;
-        try {
-          // Try to extract JSON from markdown code blocks if present
-          let jsonContent = content;
-          const codeBlockMatch = content.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-          if (codeBlockMatch) {
-            jsonContent = codeBlockMatch[1];
-            console.log('Extracted from code block:', jsonContent);
-          }
-          
-          const parsed = JSON.parse(jsonContent);
-          console.log('Parsed outputs:', parsed);
-          finalOutputs = parsed;
-          setOutputs(parsed);
-        } catch (e) {
-          console.error('JSON parse error:', e);
-          const fallback = {
-            twitter: content.split('linkedin:')[0]?.replace('twitter:', '').trim() || content,
-            linkedin: content.split('instagram:')[0]?.split('linkedin:')[1]?.trim() || '',
-            instagram: content.split('facebook:')[0]?.split('instagram:')[1]?.trim() || '',
-            facebook: content.split('email:')[0]?.split('facebook:')[1]?.trim() || '',
-            email: content.split('email:')[1]?.trim() || ''
-          };
-          console.log('Fallback outputs:', fallback);
-          finalOutputs = fallback;
-          setOutputs(fallback);
+        if (!response.ok) {
+          throw new Error('Failed to generate content');
         }
+
+        const responseData = await response.json();
+
+        if (responseData.choices && responseData.choices[0]) {
+          const content = responseData.choices[0].message.content;
+          console.log('Raw AI response:', content);
+          
+          let finalOutputs;
+          try {
+            // Try to extract JSON from markdown code blocks if present
+            let jsonContent = content;
+            const codeBlockMatch = content.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+            if (codeBlockMatch) {
+              jsonContent = codeBlockMatch[1];
+              console.log('Extracted from code block:', jsonContent);
+            }
+            
+            const parsed = JSON.parse(jsonContent);
+            console.log('Parsed outputs:', parsed);
+            finalOutputs = parsed;
+            setOutputs(parsed);
+          } catch (e) {
+            console.error('JSON parse error:', e);
+            const fallback = {
+              twitter: content.split('linkedin:')[0]?.replace('twitter:', '').trim() || content,
+              linkedin: content.split('instagram:')[0]?.split('linkedin:')[1]?.trim() || '',
+              instagram: content.split('facebook:')[0]?.split('instagram:')[1]?.trim() || '',
+              facebook: content.split('email:')[0]?.split('facebook:')[1]?.trim() || '',
+              email: content.split('email:')[1]?.trim() || ''
+            };
+            console.log('Fallback outputs:', fallback);
+            finalOutputs = fallback;
+            setOutputs(fallback);
+          }
+          setShowResults(true);
+          
+          // Save to content history
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            await supabase
+              .from('content_history')
+              .insert({
+                user_id: user.id,
+                input_text: inputText,
+                twitter: finalOutputs.twitter,
+                linkedin: finalOutputs.linkedin,
+                instagram: finalOutputs.instagram,
+                facebook: finalOutputs.facebook,
+                email: finalOutputs.email,
+                tone: selectedTone
+              });
+          }
+        }
+      } else {
+        // Production: Call serverless function
+        const response = await fetch('/api/repurpose', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            inputText,
+            tone: selectedTone,
+            brandVoice
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to generate content');
+        }
+
+        data = await response.json();
+        console.log('Serverless response:', data);
+        setOutputs(data);
         setShowResults(true);
         
         // Save to content history
@@ -152,11 +197,11 @@ Return the response in this exact JSON format:
             .insert({
               user_id: user.id,
               input_text: inputText,
-              twitter: finalOutputs.twitter,
-              linkedin: finalOutputs.linkedin,
-              instagram: finalOutputs.instagram,
-              facebook: finalOutputs.facebook,
-              email: finalOutputs.email,
+              twitter: data.twitter,
+              linkedin: data.linkedin,
+              instagram: data.instagram,
+              facebook: data.facebook,
+              email: data.email,
               tone: selectedTone
             });
         }

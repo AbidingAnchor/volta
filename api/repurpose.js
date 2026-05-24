@@ -3,11 +3,36 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { inputText } = req.body;
+  const { inputText, tone, brandVoice } = req.body;
 
   if (!inputText || !inputText.trim()) {
     return res.status(400).json({ error: 'Input text is required' });
   }
+
+  let systemPrompt = `You are an expert content repurposing AI. Given a blog post or article, generate 5 different social media formats:
+
+1. Twitter/X thread: Exactly 5 tweets, each under 280 characters. Format as "Tweet 1: [content]\\nTweet 2: [content]\\nTweet 3: [content]\\nTweet 4: [content]\\nTweet 5: [content]"
+2. LinkedIn post: Professional, engaging post with 2-3 paragraphs, include relevant hashtags
+3. Instagram caption: Engaging caption with emojis, 1-2 paragraphs, include relevant hashtags
+4. Facebook post: Conversational, slightly longer than Twitter, with a hook opener, the main message, and a call to action at the end
+5. Email newsletter intro: Compelling introduction paragraph that hooks readers`;
+
+  if (tone) {
+    systemPrompt += `\\n\\nWrite all content in a ${tone} tone.`;
+  }
+
+  if (brandVoice && brandVoice.trim()) {
+    systemPrompt += `\\n\\nHere are examples of the user's writing style to match their brand voice:\\n${brandVoice}\\n\\nUse these examples to match their writing style, voice, and personality.`;
+  }
+
+  systemPrompt += `\\n\\nReturn the response in this exact JSON format:
+{
+  "twitter": "Tweet 1: ...\\nTweet 2: ...\\nTweet 3: ...\\nTweet 4: ...\\nTweet 5: ...",
+  "linkedin": "...",
+  "instagram": "...",
+  "facebook": "...",
+  "email": "..."
+}`;
 
   try {
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -21,22 +46,7 @@ export default async function handler(req, res) {
         messages: [
           {
             role: 'system',
-            content: `You are an expert content repurposing AI. Given a blog post or article, generate 5 different social media formats:
-            
-1. Twitter/X thread: Exactly 5 tweets, each under 280 characters. Format as "Tweet 1: [content]\\nTweet 2: [content]\\nTweet 3: [content]\\nTweet 4: [content]\\nTweet 5: [content]"
-2. LinkedIn post: Professional, engaging post with 2-3 paragraphs, include relevant hashtags
-3. Instagram caption: Engaging caption with emojis, 1-2 paragraphs, include relevant hashtags
-4. Facebook post: Conversational, slightly longer than Twitter, with a hook opener, the main message, and a call to action at the end
-5. Email newsletter intro: Compelling introduction paragraph that hooks readers
-
-Return the response in this exact JSON format:
-{
-  "twitter": "Tweet 1: ...\\nTweet 2: ...\\nTweet 3: ...\\nTweet 4: ...\\nTweet 5: ...",
-  "linkedin": "...",
-  "instagram": "...",
-  "facebook": "...",
-  "email": "..."
-}`
+            content: systemPrompt
           },
           {
             role: 'user',
