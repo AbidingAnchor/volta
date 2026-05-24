@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS scheduled_posts (
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
   platform TEXT NOT NULL CHECK (platform IN ('twitter', 'linkedin', 'instagram', 'facebook', 'email')),
   content TEXT NOT NULL,
-  scheduled_date TIMESTAMP WITH TIME ZONE NOT NULL,
+  scheduled_at TIMESTAMP WITH TIME ZONE NOT NULL,
   status TEXT DEFAULT 'scheduled' CHECK (status IN ('scheduled', 'posted', 'failed')),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -34,4 +34,4 @@ CREATE POLICY "Users can delete own scheduled posts"
 
 -- Create index for faster queries
 CREATE INDEX IF NOT EXISTS idx_scheduled_posts_user_date
-  ON scheduled_posts(user_id, scheduled_date);
+  ON scheduled_posts(user_id, scheduled_at);

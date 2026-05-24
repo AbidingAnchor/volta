@@ -22,6 +22,9 @@ function Dashboard() {
   const [selectedPost, setSelectedPost] = useState(null);
   const [scheduledDate, setScheduledDate] = useState('');
   const [scheduledTime, setScheduledTime] = useState('');
+  const [selectedTone, setSelectedTone] = useState('Inspirational');
+  const [brandVoice, setBrandVoice] = useState('');
+  const [brandVoiceCollapsed, setBrandVoiceCollapsed] = useState(true);
 
   useEffect(() => {
     fetchProfile();
@@ -49,8 +52,12 @@ function Dashboard() {
   const handleRepurpose = async () => {
     if (!inputText.trim()) return;
 
-    // Check if free plan user has reached limit
-    if (profile?.plan === 'free' && profile?.repurpose_count >= 5) {
+    // Developer/admin override for testing
+    const { data: { user } } = await supabase.auth.getUser();
+    const isAdmin = user?.email === 'drewnegron95@gmail.com';
+
+    // Check if free plan user has reached limit (skip for admin)
+    if (!isAdmin && profile?.plan === 'free' && profile?.repurpose_count >= 5) {
       setShowUpgradeModal(true);
       return;
     }
@@ -59,12 +66,43 @@ function Dashboard() {
     setOutputs({ twitter: '', linkedin: '', instagram: '', facebook: '', email: '' });
 
     try {
-      const response = await fetch('/api/repurpose', {
+      console.log('API Key:', process.env.REACT_APP_GROQ_API_KEY);
+      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.REACT_APP_GROQ_API_KEY}`
         },
-        body: JSON.stringify({ inputText })
+        body: JSON.stringify({
+          model: 'llama-3.3-70b-versatile',
+          messages: [
+            {
+              role: 'system',
+              content: `You are an expert content repurposing AI. Given a blog post or article, generate 5 different social media formats. Write all content in a ${selectedTone} tone.${brandVoice ? ` Match the writing style and tone of these examples: ${brandVoice}` : ''}
+              
+1. Twitter/X thread: Exactly 5 tweets, each under 280 characters. Format as "Tweet 1: [content]\\nTweet 2: [content]\\nTweet 3: [content]\\nTweet 4: [content]\\nTweet 5: [content]"
+2. LinkedIn post: Professional, engaging post with 2-3 paragraphs, include relevant hashtags
+3. Instagram caption: Engaging caption with emojis, 1-2 paragraphs, include relevant hashtags
+4. Facebook post: Conversational, slightly longer than Twitter, with a hook opener, the main message, and a call to action at the end
+5. Email newsletter intro: Compelling introduction paragraph that hooks readers
+
+Return the response in this exact JSON format:
+{
+  "twitter": "Tweet 1: ...\\nTweet 2: ...\\nTweet 3: ...\\nTweet 4: ...\\nTweet 5: ...",
+  "linkedin": "...",
+  "instagram": "...",
+  "facebook": "...",
+  "email": "..."
+}`
+            },
+            {
+              role: 'user',
+              content: inputText
+            }
+          ],
+          temperature: 0.7,
+          max_tokens: 2000
+        })
       });
 
       const data = await response.json();
@@ -73,8 +111,56 @@ function Dashboard() {
         throw new Error(data.error || 'Failed to generate content');
       }
 
-      setOutputs(data);
-      setShowResults(true);
+      if (data.choices && data.choices[0]) {
+        const content = data.choices[0].message.content;
+        console.log('Raw AI response:', content);
+        
+        let finalOutputs;
+        try {
+          // Try to extract JSON from markdown code blocks if present
+          let jsonContent = content;
+          const codeBlockMatch = content.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+          if (codeBlockMatch) {
+            jsonContent = codeBlockMatch[1];
+            console.log('Extracted from code block:', jsonContent);
+          }
+          
+          const parsed = JSON.parse(jsonContent);
+          console.log('Parsed outputs:', parsed);
+          finalOutputs = parsed;
+          setOutputs(parsed);
+        } catch (e) {
+          console.error('JSON parse error:', e);
+          const fallback = {
+            twitter: content.split('linkedin:')[0]?.replace('twitter:', '').trim() || content,
+            linkedin: content.split('instagram:')[0]?.split('linkedin:')[1]?.trim() || '',
+            instagram: content.split('facebook:')[0]?.split('instagram:')[1]?.trim() || '',
+            facebook: content.split('email:')[0]?.split('facebook:')[1]?.trim() || '',
+            email: content.split('email:')[1]?.trim() || ''
+          };
+          console.log('Fallback outputs:', fallback);
+          finalOutputs = fallback;
+          setOutputs(fallback);
+        }
+        setShowResults(true);
+        
+        // Save to content history
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          await supabase
+            .from('content_history')
+            .insert({
+              user_id: user.id,
+              input_text: inputText,
+              twitter: finalOutputs.twitter,
+              linkedin: finalOutputs.linkedin,
+              instagram: finalOutputs.instagram,
+              facebook: finalOutputs.facebook,
+              email: finalOutputs.email,
+              tone: selectedTone
+            });
+        }
+      }
       
       // Increment repurpose count
       const { data: { user } } = await supabase.auth.getUser();
@@ -120,7 +206,7 @@ function Dashboard() {
           user_id: user.id,
           platform: selectedPost.platform,
           content: selectedPost.content,
-          scheduled_date: scheduledDateTime.toISOString()
+          scheduled_at: scheduledDateTime.toISOString()
         });
       
       setShowScheduleModal(false);
@@ -136,11 +222,9 @@ function Dashboard() {
       <div className="noise-overlay"></div>
       <div className="grid-mesh"></div>
       <div className="stars"></div>
-      <div className="blob blob-1"></div>
-      <div className="blob blob-2"></div>
-      <div className="blob blob-3"></div>
-      <div className="blob blob-4"></div>
-      <div className="blob blob-5"></div>
+      <div className="gradient-orb gradient-orb-1"></div>
+      <div className="gradient-orb gradient-orb-2"></div>
+      <div className="gradient-orb gradient-orb-3"></div>
       <nav className="navbar">
         <div className="nav-logo">
           <Link to="/">
@@ -154,18 +238,14 @@ function Dashboard() {
             <span className={`user-plan ${profile?.plan}`}>{profile?.plan || 'free'}</span>
           </div>
           <Link to="/calendar" className="nav-link">Calendar</Link>
+          <Link to="/history" className="nav-link">History</Link>
           <Link to="/pricing" className="nav-link">Pricing</Link>
           <button onClick={handleSignOut} className="nav-link">Sign Out</button>
         </div>
       </nav>
 
       <header className="header">
-        <div className="hero-logo">
-          <span className="hero-logo-icon">⚡</span>
-        </div>
-        <h1>Dashboard</h1>
-        <p className="tagline">Transform Your Content</p>
-        <p className="subtitle">Paste your content and let AI do the rest.</p>
+        <h1 className="dashboard-greeting">What are we creating today?</h1>
       </header>
 
       <div className="frosted-divider"></div>
@@ -182,6 +262,55 @@ function Dashboard() {
             />
             <div className="character-count">
               {inputText.length} characters
+            </div>
+            <div className="collapsible-section">
+              <button 
+                className="collapsible-toggle"
+                onClick={() => setBrandVoiceCollapsed(!brandVoiceCollapsed)}
+              >
+                <span className="toggle-icon">{brandVoiceCollapsed ? '+' : '−'}</span>
+                <span>Brand Voice (Optional)</span>
+              </button>
+              {!brandVoiceCollapsed && (
+                <div className="collapsible-content">
+                  <label className="brand-voice-label">
+                    Paste examples of your writing style so Volta can match your voice
+                  </label>
+                  <textarea
+                    className="brand-voice-textarea"
+                    placeholder="Paste up to 3 examples of your past high-performing posts here..."
+                    value={brandVoice}
+                    onChange={(e) => setBrandVoice(e.target.value)}
+                    rows={6}
+                  />
+                </div>
+              )}
+            </div>
+            <div className="tone-selector">
+              <button
+                className={`tone-button ${selectedTone === 'Professional' ? 'active' : ''}`}
+                onClick={() => setSelectedTone('Professional')}
+              >
+                🎯 Professional
+              </button>
+              <button
+                className={`tone-button ${selectedTone === 'Casual' ? 'active' : ''}`}
+                onClick={() => setSelectedTone('Casual')}
+              >
+                😎 Casual
+              </button>
+              <button
+                className={`tone-button ${selectedTone === 'Funny' ? 'active' : ''}`}
+                onClick={() => setSelectedTone('Funny')}
+              >
+                😂 Funny
+              </button>
+              <button
+                className={`tone-button ${selectedTone === 'Inspirational' ? 'active' : ''}`}
+                onClick={() => setSelectedTone('Inspirational')}
+              >
+                🔥 Inspirational
+              </button>
             </div>
             <button
               className={`repurpose-button ${loading ? 'loading' : ''}`}

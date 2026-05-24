@@ -1,18 +1,48 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { supabase } from '../lib/supabase';
 import '../App.css';
 
 function Pricing() {
+  const [loading, setLoading] = useState(false);
+
+  const handleSubscribe = async (plan) => {
+    setLoading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        window.location.href = '/auth';
+        return;
+      }
+
+      const response = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: user.id,
+          plan,
+        }),
+      });
+
+      const { url } = await response.json();
+      window.location.href = url;
+    } catch (error) {
+      console.error('Error creating checkout session:', error);
+      alert('Error starting checkout. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <div className="app">
       <div className="noise-overlay"></div>
       <div className="grid-mesh"></div>
       <div className="stars"></div>
-      <div className="blob blob-1"></div>
-      <div className="blob blob-2"></div>
-      <div className="blob blob-3"></div>
-      <div className="blob blob-4"></div>
-      <div className="blob blob-5"></div>
+      <div className="gradient-orb gradient-orb-1"></div>
+      <div className="gradient-orb gradient-orb-2"></div>
+      <div className="gradient-orb gradient-orb-3"></div>
       <nav className="navbar">
         <div className="nav-logo">
           <Link to="/">
@@ -76,7 +106,13 @@ function Pricing() {
                   <li>Content scheduler</li>
                   <li>Priority support</li>
                 </ul>
-                <Link to="/auth" className="repurpose-button">Start Pro Trial</Link>
+                <button 
+                  onClick={() => handleSubscribe('pro')}
+                  disabled={loading}
+                  className="repurpose-button"
+                >
+                  {loading ? 'Processing...' : 'Start Pro Trial'}
+                </button>
               </div>
             </div>
 
@@ -97,7 +133,13 @@ function Pricing() {
                   <li>Team accounts (up to 5)</li>
                   <li>API access</li>
                 </ul>
-                <Link to="/auth" className="repurpose-button">Get Business</Link>
+                <button 
+                  onClick={() => handleSubscribe('business')}
+                  disabled={loading}
+                  className="repurpose-button"
+                >
+                  {loading ? 'Processing...' : 'Get Business'}
+                </button>
               </div>
             </div>
           </div>

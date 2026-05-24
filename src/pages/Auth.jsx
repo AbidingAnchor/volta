@@ -52,11 +52,9 @@ function Auth() {
       <div className="noise-overlay"></div>
       <div className="grid-mesh"></div>
       <div className="stars"></div>
-      <div className="blob blob-1"></div>
-      <div className="blob blob-2"></div>
-      <div className="blob blob-3"></div>
-      <div className="blob blob-4"></div>
-      <div className="blob blob-5"></div>
+      <div className="gradient-orb gradient-orb-1"></div>
+      <div className="gradient-orb gradient-orb-2"></div>
+      <div className="gradient-orb gradient-orb-3"></div>
       <nav className="navbar">
         <div className="nav-logo">
           <Link to="/">

@@ -8,11 +8,9 @@ function Landing() {
       <div className="noise-overlay"></div>
       <div className="grid-mesh"></div>
       <div className="stars"></div>
-      <div className="blob blob-1"></div>
-      <div className="blob blob-2"></div>
-      <div className="blob blob-3"></div>
-      <div className="blob blob-4"></div>
-      <div className="blob blob-5"></div>
+      <div className="gradient-orb gradient-orb-1"></div>
+      <div className="gradient-orb gradient-orb-2"></div>
+      <div className="gradient-orb gradient-orb-3"></div>
       <nav className="navbar">
         <div className="nav-logo">
           <span className="nav-logo-icon">⚡</span>
@@ -25,45 +23,52 @@ function Landing() {
       </nav>
 
       <header className="header">
-        <div className="hero-logo">
-          <span className="hero-logo-icon">⚡</span>
-        </div>
-        <h1>Volta</h1>
-        <p className="tagline">AI-Powered Content Repurposing</p>
-        <p className="subtitle">Turn one post into many. Instantly.</p>
-        <div className="platform-preview">
-          <div className="platform-item">
-            <svg className="platform-icon twitter-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-            </svg>
-            <span className="platform-name">Twitter</span>
-          </div>
-          <div className="platform-item">
-            <svg className="platform-icon linkedin-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
-              <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
-            </svg>
-            <span className="platform-name">LinkedIn</span>
-          </div>
-          <div className="platform-item">
-            <svg className="platform-icon instagram-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-              <circle cx="12" cy="13" r="4"/>
-            </svg>
-            <span className="platform-name">Instagram</span>
-          </div>
-          <div className="platform-item">
-            <svg className="platform-icon email-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-              <polyline points="22,6 12,13 2,6"/>
-            </svg>
-            <span className="platform-name">Email</span>
+        <div className="hero-section">
+          <h1 className="hero-title">
+            <span className="gradient-text">Turn one post</span>
+            <br />
+            <span className="gradient-text">into many.</span>
+          </h1>
+          <p className="hero-subtitle">AI-powered content repurposing for modern creators</p>
+          <div className="hero-cta">
+            <Link to="/auth" className="hero-button">Start Creating Free</Link>
           </div>
         </div>
-        <div className="cta-section">
-          <Link to="/auth" className="repurpose-button">Get Started Free</Link>
+        <div className="hero-mockup">
+          <div className="mockup-card">
+            <div className="mockup-header">
+              <div className="mockup-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+            </div>
+            <div className="mockup-content">
+              <div className="mockup-input">Paste your content here...</div>
+              <div className="mockup-outputs">
+                <div className="mockup-output twitter">🐦 Twitter</div>
+                <div className="mockup-output linkedin">💼 LinkedIn</div>
+                <div className="mockup-output instagram">📸 Instagram</div>
+              </div>
+            </div>
+          </div>
         </div>
       </header>
+
+      <div className="trust-badges">
+        <div className="trust-badge">
+          <span className="trust-icon">⚡</span>
+          <span className="trust-text">Instant Results</span>
+        </div>
+        <div className="trust-badge">
+          <span className="trust-icon">🔒</span>
+          <span className="trust-text">Secure & Private</span>
+        </div>
+        <div className="trust-badge">
+          <span className="trust-icon">✨</span>
+          <span className="trust-text">AI-Powered</span>
+        </div>
+      </div>
 
       <div className="frosted-divider"></div>
 
