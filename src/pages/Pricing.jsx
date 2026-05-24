@@ -56,91 +56,71 @@ function Pricing() {
         </div>
       </nav>
 
-      <header className="header">
-        <div className="hero-logo">
-          <span className="hero-logo-icon">⚡</span>
-        </div>
-        <h1>Pricing</h1>
-        <p className="tagline">Simple, Transparent Pricing</p>
-        <p className="subtitle">Choose the plan that fits your needs.</p>
+      <header className="header pricing-header">
+        <h1 className="pricing-title">Simple Pricing</h1>
+        <p className="pricing-subtitle">Choose the plan that fits your needs</p>
       </header>
-
-      <div className="frosted-divider"></div>
 
       <main className="main">
         <div className="pricing-section">
           <div className="pricing-grid">
-            <div className="output-card pricing-card">
-              <div className="card-header">
-                <div className="card-title">
-                  <span className="card-icon">🌱</span>
-                  <h3>Free</h3>
-                </div>
+            <div className="pricing-card">
+              <div className="pricing-card-header">
+                <h3 className="pricing-plan-name">Free</h3>
+                <div className="pricing-price">$0<span className="pricing-period">/mo</span></div>
               </div>
-              <div className="card-content">
-                <div className="price">$0</div>
-                <div className="price-period">per month</div>
-                <ul className="features-list">
-                  <li>5 repurposes per month</li>
-                  <li>4 platforms</li>
-                  <li>Basic support</li>
-                </ul>
-                <Link to="/auth" className="repurpose-button">Get Started Free</Link>
-              </div>
+              <ul className="pricing-features">
+                <li>5 repurposes/month</li>
+                <li>5 scheduled posts</li>
+                <li>1 brand voice</li>
+                <li>Basic analytics</li>
+              </ul>
+              <Link to="/auth" className="pricing-button">Get Started</Link>
             </div>
 
-            <div className="output-card pricing-card featured">
-              <div className="card-header">
-                <div className="card-title">
-                  <span className="card-icon">⚡</span>
-                  <h3>Pro</h3>
-                </div>
-                <span className="badge">MOST POPULAR</span>
+            <div className="pricing-card pricing-card-pro">
+              <div className="pricing-badge">Most Popular</div>
+              <div className="pricing-card-header">
+                <h3 className="pricing-plan-name">Pro</h3>
+                <div className="pricing-price">$29<span className="pricing-period">/mo</span></div>
               </div>
-              <div className="card-content">
-                <div className="price">$29</div>
-                <div className="price-period">per month</div>
-                <ul className="features-list">
-                  <li>Unlimited repurposes</li>
-                  <li>All platforms</li>
-                  <li>Content scheduler</li>
-                  <li>Priority support</li>
-                </ul>
-                <button 
-                  onClick={() => handleSubscribe('pro')}
-                  disabled={loading}
-                  className="repurpose-button"
-                >
-                  {loading ? 'Processing...' : 'Start Pro Trial'}
-                </button>
-              </div>
+              <ul className="pricing-features">
+                <li>100 repurposes/month</li>
+                <li>Unlimited scheduling</li>
+                <li>5 brand voices</li>
+                <li>Advanced analytics</li>
+                <li>Priority support</li>
+              </ul>
+              <button 
+                onClick={() => handleSubscribe('pro')}
+                disabled={loading}
+                className="pricing-button pricing-button-pro"
+              >
+                {loading ? 'Processing...' : 'Start Pro Trial'}
+              </button>
             </div>
 
-            <div className="output-card pricing-card">
-              <div className="card-header">
-                <div className="card-title">
-                  <span className="card-icon">🚀</span>
-                  <h3>Business</h3>
-                </div>
+            <div className="pricing-card">
+              <div className="pricing-card-header">
+                <h3 className="pricing-plan-name">Business</h3>
+                <div className="pricing-price">$79<span className="pricing-period">/mo</span></div>
               </div>
-              <div className="card-content">
-                <div className="price">$79</div>
-                <div className="price-period">per month</div>
-                <ul className="features-list">
-                  <li>Everything in Pro</li>
-                  <li>DM automation</li>
-                  <li>Analytics dashboard</li>
-                  <li>Team accounts (up to 5)</li>
-                  <li>API access</li>
-                </ul>
-                <button 
-                  onClick={() => handleSubscribe('business')}
-                  disabled={loading}
-                  className="repurpose-button"
-                >
-                  {loading ? 'Processing...' : 'Get Business'}
-                </button>
-              </div>
+              <ul className="pricing-features">
+                <li>Unlimited repurposes</li>
+                <li>Unlimited scheduling</li>
+                <li>Unlimited brand voices</li>
+                <li>Team accounts (up to 5)</li>
+                <li>API access</li>
+                <li>DM automation</li>
+                <li>Dedicated support</li>
+              </ul>
+              <button 
+                onClick={() => handleSubscribe('business')}
+                disabled={loading}
+                className="pricing-button"
+              >
+                {loading ? 'Processing...' : 'Get Business'}
+              </button>
             </div>
           </div>
         </div>

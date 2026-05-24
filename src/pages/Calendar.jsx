@@ -203,6 +203,12 @@ function Calendar() {
 
   return (
     <div className="calendar-page">
+      <div className="noise-overlay"></div>
+      <div className="grid-mesh"></div>
+      <div className="stars"></div>
+      <div className="gradient-orb gradient-orb-1"></div>
+      <div className="gradient-orb gradient-orb-2"></div>
+      <div className="gradient-orb gradient-orb-3"></div>
       <nav className="nav">
         <div className="nav-logo">
           <Link to="/dashboard">
@@ -220,14 +226,14 @@ function Calendar() {
       <main className="calendar-main">
         <div className="calendar-container">
           <div className="calendar-header">
-            <button onClick={() => navigateMonth(-1)} className="calendar-nav-button">
-              ← Previous
+            <button onClick={() => navigateMonth(-1)} className="calendar-nav-pill">
+              ←
             </button>
             <h1 className="calendar-title">
               {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
             </h1>
-            <button onClick={() => navigateMonth(1)} className="calendar-nav-button">
-              Next →
+            <button onClick={() => navigateMonth(1)} className="calendar-nav-pill">
+              →
             </button>
           </div>
 
@@ -254,12 +260,12 @@ function Calendar() {
                       <span className="calendar-day-number">{day.getDate()}</span>
                       <div className="calendar-posts">
                         {posts.map(post => (
-                          <div key={post.id} className="calendar-post">
-                            <span className="calendar-post-icon">{getPlatformIcon(post.platform)}</span>
-                            <span className="calendar-post-preview">
-                              {post.content.substring(0, 30)}...
-                            </span>
-                          </div>
+                          <div 
+                            key={post.id} 
+                            className="calendar-post-dot"
+                            style={{ backgroundColor: getPlatformColor(post.platform) }}
+                            title={`${post.platform}: ${post.content.substring(0, 50)}...`}
+                          />
                         ))}
                       </div>
                     </>

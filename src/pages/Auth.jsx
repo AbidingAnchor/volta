@@ -67,15 +67,13 @@ function Auth() {
         </div>
       </nav>
 
-      <header className="header">
-        <div className="hero-logo">
-          <span className="hero-logo-icon">⚡</span>
+      <header className="header auth-header">
+        <div className="auth-logo">
+          <span className="auth-logo-icon">⚡</span>
+          <span className="auth-logo-text">Volta</span>
         </div>
-        <h1>{isLogin ? 'Welcome Back' : 'Create Account'}</h1>
-        <p className="tagline">{isLogin ? 'Sign in to continue' : 'Start your journey with Volta'}</p>
+        <p className="auth-subtitle">{isLogin ? 'Welcome back' : 'Create your account'}</p>
       </header>
-
-      <div className="frosted-divider"></div>
 
       <main className="main">
         <div className="auth-section">
