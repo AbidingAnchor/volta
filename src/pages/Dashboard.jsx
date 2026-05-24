@@ -18,6 +18,10 @@ function Dashboard() {
   const [showResults, setShowResults] = useState(false);
   const [profile, setProfile] = useState(null);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [selectedPost, setSelectedPost] = useState(null);
+  const [scheduledDate, setScheduledDate] = useState('');
+  const [scheduledTime, setScheduledTime] = useState('');
 
   useEffect(() => {
     fetchProfile();
@@ -95,6 +99,38 @@ function Dashboard() {
     setTimeout(() => setCopied({ ...copied, [type]: false }), 2000);
   };
 
+  const handleSchedule = (platform, content) => {
+    setSelectedPost({ platform, content });
+    setShowScheduleModal(true);
+  };
+
+  const handleSaveSchedule = async () => {
+    if (!scheduledDate || !scheduledTime) {
+      alert('Please select both date and time');
+      return;
+    }
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user && selectedPost) {
+      const scheduledDateTime = new Date(`${scheduledDate}T${scheduledTime}`);
+      
+      await supabase
+        .from('scheduled_posts')
+        .insert({
+          user_id: user.id,
+          platform: selectedPost.platform,
+          content: selectedPost.content,
+          scheduled_date: scheduledDateTime.toISOString()
+        });
+      
+      setShowScheduleModal(false);
+      setScheduledDate('');
+      setScheduledTime('');
+      setSelectedPost(null);
+      alert('Post scheduled successfully!');
+    }
+  };
+
   return (
     <div className="app">
       <div className="noise-overlay"></div>
@@ -117,6 +153,7 @@ function Dashboard() {
             <span className="user-name">{profile?.full_name || 'User'}</span>
             <span className={`user-plan ${profile?.plan}`}>{profile?.plan || 'free'}</span>
           </div>
+          <Link to="/calendar" className="nav-link">Calendar</Link>
           <Link to="/pricing" className="nav-link">Pricing</Link>
           <button onClick={handleSignOut} className="nav-link">Sign Out</button>
         </div>
@@ -190,6 +227,7 @@ function Dashboard() {
                 type="twitter"
                 copied={copied.twitter}
                 onCopy={() => handleCopy('twitter', outputs.twitter)}
+                onSchedule={handleSchedule}
                 delay={0}
               />
               <OutputCard
@@ -199,6 +237,7 @@ function Dashboard() {
                 type="linkedin"
                 copied={copied.linkedin}
                 onCopy={() => handleCopy('linkedin', outputs.linkedin)}
+                onSchedule={handleSchedule}
                 delay={100}
               />
               <OutputCard
@@ -208,6 +247,7 @@ function Dashboard() {
                 type="instagram"
                 copied={copied.instagram}
                 onCopy={() => handleCopy('instagram', outputs.instagram)}
+                onSchedule={handleSchedule}
                 delay={200}
               />
               <OutputCard
@@ -217,6 +257,7 @@ function Dashboard() {
                 type="facebook"
                 copied={copied.facebook}
                 onCopy={() => handleCopy('facebook', outputs.facebook)}
+                onSchedule={handleSchedule}
                 delay={300}
               />
               <OutputCard
@@ -226,6 +267,7 @@ function Dashboard() {
                 type="email"
                 copied={copied.email}
                 onCopy={() => handleCopy('email', outputs.email)}
+                onSchedule={handleSchedule}
                 delay={400}
               />
             </div>
@@ -255,11 +297,63 @@ function Dashboard() {
           </div>
         </div>
       )}
+
+      {showScheduleModal && (
+        <div className="modal-overlay" onClick={() => setShowScheduleModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>📅 Schedule Post</h2>
+            </div>
+            <div className="modal-body">
+              <div className="schedule-form">
+                <label>
+                  Platform:
+                  <span className="schedule-platform">{selectedPost?.platform}</span>
+                </label>
+                <label>
+                  Date:
+                  <input
+                    type="date"
+                    value={scheduledDate}
+                    onChange={(e) => setScheduledDate(e.target.value)}
+                    className="schedule-input"
+                  />
+                </label>
+                <label>
+                  Time:
+                  <input
+                    type="time"
+                    value={scheduledTime}
+                    onChange={(e) => setScheduledTime(e.target.value)}
+                    className="schedule-input"
+                  />
+                </label>
+                <label>
+                  Content Preview:
+                  <textarea
+                    value={selectedPost?.content || ''}
+                    readOnly
+                    className="schedule-textarea"
+                  />
+                </label>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button onClick={() => setShowScheduleModal(false)} className="modal-button secondary">
+                Cancel
+              </button>
+              <button onClick={handleSaveSchedule} className="modal-button primary">
+                Schedule Post
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-function OutputCard({ title, icon, content, type, copied, onCopy, delay }) {
+function OutputCard({ title, icon, content, type, copied, onCopy, onSchedule, delay }) {
   const [visible, setVisible] = React.useState(false);
 
   React.useEffect(() => {
@@ -276,12 +370,20 @@ function OutputCard({ title, icon, content, type, copied, onCopy, delay }) {
           <span className="card-icon">{icon}</span>
           <h3>{title}</h3>
         </div>
-        <button
-          className={`copy-button ${copied ? 'copied' : ''}`}
-          onClick={onCopy}
-        >
-          {copied ? '✓ Copied' : '📋 Copy'}
-        </button>
+        <div className="card-actions">
+          <button
+            className={`schedule-button`}
+            onClick={() => onSchedule(type, content)}
+          >
+            📅 Schedule
+          </button>
+          <button
+            className={`copy-button ${copied ? 'copied' : ''}`}
+            onClick={onCopy}
+          >
+            {copied ? '✓ Copied' : '📋 Copy'}
+          </button>
+        </div>
       </div>
       <div className="card-content">
         <pre>{content || 'No content generated yet'}</pre>
