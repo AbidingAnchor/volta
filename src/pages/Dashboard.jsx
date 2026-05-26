@@ -636,12 +636,24 @@ Return the response in this exact JSON format:
             <div className="divider"></div>
             <div className="outputs-section">
               <h2 className="outputs-title">Generated Content</h2>
-              <div className="outputs-grid">
+              <div
+                className="outputs-grid"
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, 1fr)',
+                  gap: '1.5rem',
+                  justifyItems: 'center',
+                  justifyContent: 'center',
+                  maxWidth: '900px',
+                  width: '100%',
+                  margin: '0 auto'
+                }}
+              >
                 <SkeletonCard title="Twitter Thread" icon="𝕏" type="twitter" />
                 <SkeletonCard title="LinkedIn Post" icon="in" type="linkedin" />
                 <SkeletonCard title="Instagram Caption" icon="📷" type="instagram" />
-                <SkeletonCard title="Facebook Post" icon="📘" type="facebook" />
-                <SkeletonCard title="Email Newsletter Intro" icon="✉️" type="email" />
+                <SkeletonCard title="Facebook Post" icon="📘" type="facebook" style={{ width: 'calc((100% - 3rem) / 3)' }} />
+                <SkeletonCard title="Email Newsletter Intro" icon="✉️" type="email" style={{ width: 'calc((100% - 3rem) / 3)' }} />
               </div>
             </div>
           </>
@@ -650,7 +662,19 @@ Return the response in this exact JSON format:
             <div className="divider"></div>
             <div className="outputs-section">
               <h2 className="outputs-title">Generated Content</h2>
-            <div className="outputs-grid">
+            <div
+              className="outputs-grid"
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '1.5rem',
+                justifyItems: 'center',
+                justifyContent: 'center',
+                maxWidth: '900px',
+                width: '100%',
+                margin: '0 auto'
+              }}
+            >
               <OutputCard
                 title="Twitter Thread"
                 icon="𝕏"
@@ -701,8 +725,8 @@ Return the response in this exact JSON format:
                 onSchedule={handleSchedule}
                 delay={400}
               />
+              </div>
             </div>
-          </div>
           </>
         ) : null}
       </main>
@@ -796,22 +820,47 @@ function OutputCard({ title, icon, content, type, copied, onCopy, onSchedule, de
   }, [delay]);
 
   return (
-    <div className={`output-card ${type} ${visible ? 'visible' : ''}`}>
-      <div className="card-header">
-        <div className="card-title">
+    <div className={`output-card ${type} ${visible ? 'visible' : ''}`} style={{ width: '100%', minWidth: 0, boxSizing: 'border-box' }}>
+      <div
+        className="card-header"
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: '0.75rem',
+          flexWrap: 'wrap',
+          width: '100%',
+          boxSizing: 'border-box'
+        }}
+      >
+        <div className="card-title" style={{ flex: '1 1 120px', minWidth: 0 }}>
           <span className="card-icon">{icon}</span>
-          <h3>{title}</h3>
+          <h3 style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</h3>
         </div>
-        <div className="card-actions">
+        <div
+          className="card-actions"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'flex-end',
+            gap: '0.5rem',
+            flex: '0 1 auto',
+            maxWidth: '100%',
+            minWidth: 0,
+            flexWrap: 'wrap'
+          }}
+        >
           <button
             className={`schedule-button`}
             onClick={() => onSchedule(type, content)}
+            style={{ flex: '0 0 auto', whiteSpace: 'nowrap' }}
           >
             📅 Schedule
           </button>
           <button
             className={`copy-button ${copied ? 'copied' : ''}`}
             onClick={onCopy}
+            style={{ flex: '0 0 auto', whiteSpace: 'nowrap' }}
           >
             {copied ? '✓ Copied' : '📋 Copy'}
           </button>
@@ -828,11 +877,22 @@ function OutputCard({ title, icon, content, type, copied, onCopy, onSchedule, de
 
 function SkeletonCard({ title, icon, type }) {
   return (
-    <div className={`output-card skeleton ${type}`}>
-      <div className="card-header">
-        <div className="card-title">
+    <div className={`output-card skeleton ${type}`} style={{ width: '100%', minWidth: 0, boxSizing: 'border-box' }}>
+      <div
+        className="card-header"
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: '0.75rem',
+          flexWrap: 'wrap',
+          width: '100%',
+          boxSizing: 'border-box'
+        }}
+      >
+        <div className="card-title" style={{ flex: '1 1 120px', minWidth: 0 }}>
           <span className="card-icon">{icon}</span>
-          <h3>{title}</h3>
+          <h3 style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</h3>
         </div>
         <div className="skeleton-button"></div>
       </div>
