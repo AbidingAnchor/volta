@@ -5,11 +5,12 @@ import Footer from '../components/Footer';
 import '../App.css';
 
 function Landing() {
+  console.log('Landing component rendering');
   return (
     <div className="app">
-      <div className="gradient-orb gradient-orb-1"></div>
+      {/* <div className="gradient-orb gradient-orb-1"></div>
       <div className="gradient-orb gradient-orb-2"></div>
-      <div className="gradient-orb gradient-orb-3"></div>
+      <div className="gradient-orb gradient-orb-3"></div> */}
       <Navbar />
 
       <header className="header">

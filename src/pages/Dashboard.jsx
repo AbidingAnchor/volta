@@ -122,6 +122,113 @@ function Dashboard() {
     }
   };
 
+  const extractPlatformContent = (content, platform) => {
+    // Try to match patterns like "twitter: content" or "twitter": "content"
+    const patterns = [
+      new RegExp(`${platform}:\\s*([\\s\\S]*?)(?=\\n\\w+:|$)`, 'i'),
+      new RegExp(`"${platform}"\\s*:\\s*"([^"]*)"`, 'i'),
+      new RegExp(`"${platform}"\\s*:\\s*'([^']*)'`, 'i')
+    ];
+    
+    for (const pattern of patterns) {
+      const match = content.match(pattern);
+      if (match && match[1]) {
+        return match[1].trim();
+      }
+    }
+    return '';
+  };
+
+  const stringifyOutput = (value) => {
+    if (value === null || value === undefined) return '';
+    if (Array.isArray(value)) {
+      return value.map(stringifyOutput).filter(Boolean).join('\n');
+    }
+    if (typeof value === 'object') {
+      return Object.values(value).map(stringifyOutput).filter(Boolean).join('\n');
+    }
+    return String(value).trim();
+  };
+
+  const getOutputByAliases = (source, aliases) => {
+    if (!source || typeof source !== 'object' || Array.isArray(source)) return '';
+
+    const normalizeKey = (key) => key.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const entries = Object.entries(source);
+
+    for (const alias of aliases) {
+      const normalizedAlias = normalizeKey(alias);
+      const entry = entries.find(([key]) => normalizeKey(key) === normalizedAlias);
+      if (entry) return stringifyOutput(entry[1]);
+    }
+
+    return '';
+  };
+
+  const normalizeParsedOutputs = (parsed) => ({
+    twitter: getOutputByAliases(parsed, ['twitter', 'x', 'tweets', 'twitterThread', 'twitter_thread']),
+    linkedin: getOutputByAliases(parsed, ['linkedin', 'linkedIn', 'linkedinPost', 'linkedin_post']),
+    instagram: getOutputByAliases(parsed, ['instagram', 'instagramCaption', 'instagram_caption']),
+    facebook: getOutputByAliases(parsed, ['facebook', 'facebookPost', 'facebook_post']),
+    email: getOutputByAliases(parsed, ['email', 'newsletter', 'emailIntro', 'email_intro', 'emailNewsletterIntro', 'email_newsletter_intro'])
+  });
+
+  const extractJsonObjectText = (content) => {
+    const text = stringifyOutput(content);
+    const codeBlockMatch = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+    const candidate = codeBlockMatch ? codeBlockMatch[1] : text;
+    const firstBrace = candidate.indexOf('{');
+    const lastBrace = candidate.lastIndexOf('}');
+
+    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+      return candidate.slice(firstBrace, lastBrace + 1);
+    }
+
+    return candidate;
+  };
+
+  const parseRepurposeResponse = (rawResponse) => {
+    const rawText = typeof rawResponse === 'string'
+      ? rawResponse
+      : stringifyOutput(rawResponse);
+    const nestedPayload = rawResponse?.data || rawResponse?.payload || rawResponse?.response;
+    const textPayload = rawResponse?.content || rawResponse?.result || rawResponse?.output || rawResponse?.message;
+    const stringPayload = [textPayload, nestedPayload].find((payload) => typeof payload === 'string');
+    let parsed = null;
+
+    if (rawResponse && typeof rawResponse === 'object' && !Array.isArray(rawResponse)) {
+      parsed = rawResponse;
+    }
+
+    if (nestedPayload && typeof nestedPayload === 'object' && !Array.isArray(nestedPayload)) {
+      parsed = nestedPayload;
+    }
+
+    if (typeof rawResponse === 'string' || typeof stringPayload === 'string') {
+      const jsonSource = typeof stringPayload === 'string' ? stringPayload : rawResponse;
+      try {
+        parsed = JSON.parse(extractJsonObjectText(jsonSource));
+      } catch (error) {
+        console.warn('Could not parse AI response as JSON, using platform fallback:', error);
+      }
+    }
+
+    const normalized = normalizeParsedOutputs(parsed);
+    const fallback = {
+      twitter: normalized.twitter || extractPlatformContent(rawText, 'twitter') || extractPlatformContent(rawText, 'x'),
+      linkedin: normalized.linkedin || extractPlatformContent(rawText, 'linkedin'),
+      instagram: normalized.instagram || extractPlatformContent(rawText, 'instagram'),
+      facebook: normalized.facebook || extractPlatformContent(rawText, 'facebook'),
+      email: normalized.email || extractPlatformContent(rawText, 'email')
+    };
+
+    if (!Object.values(fallback).some(Boolean)) {
+      fallback.twitter = rawText.trim();
+    }
+
+    return fallback;
+  };
+
   const handleRepurpose = async () => {
     if (!inputText.trim()) return;
 
@@ -192,34 +299,9 @@ Return the response in this exact JSON format:
         if (responseData.choices && responseData.choices[0]) {
           const content = responseData.choices[0].message.content;
           console.log('Raw AI response:', content);
-          
-          let finalOutputs;
-          try {
-            // Try to extract JSON from markdown code blocks if present
-            let jsonContent = content;
-            const codeBlockMatch = content.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-            if (codeBlockMatch) {
-              jsonContent = codeBlockMatch[1];
-              console.log('Extracted from code block:', jsonContent);
-            }
-            
-            const parsed = JSON.parse(jsonContent);
-            console.log('Parsed outputs:', parsed);
-            finalOutputs = parsed;
-            setOutputs(parsed);
-          } catch (e) {
-            console.error('JSON parse error:', e);
-            const fallback = {
-              twitter: content.split('linkedin:')[0]?.replace('twitter:', '').trim() || content,
-              linkedin: content.split('instagram:')[0]?.split('linkedin:')[1]?.trim() || '',
-              instagram: content.split('facebook:')[0]?.split('instagram:')[1]?.trim() || '',
-              facebook: content.split('email:')[0]?.split('facebook:')[1]?.trim() || '',
-              email: content.split('email:')[1]?.trim() || ''
-            };
-            console.log('Fallback outputs:', fallback);
-            finalOutputs = fallback;
-            setOutputs(fallback);
-          }
+          const finalOutputs = parseRepurposeResponse(content);
+          console.log('Parsed outputs:', finalOutputs);
+          setOutputs(finalOutputs);
           setShowResults(true);
           
           // Save to content history
@@ -259,7 +341,9 @@ Return the response in this exact JSON format:
 
         data = await response.json();
         console.log('Serverless response:', data);
-        setOutputs(data);
+        const finalOutputs = parseRepurposeResponse(data);
+        console.log('Parsed serverless outputs:', finalOutputs);
+        setOutputs(finalOutputs);
         setShowResults(true);
         
         // Save to content history
@@ -270,11 +354,11 @@ Return the response in this exact JSON format:
             .insert({
               user_id: user.id,
               input_text: inputText,
-              twitter: data.twitter,
-              linkedin: data.linkedin,
-              instagram: data.instagram,
-              facebook: data.facebook,
-              email: data.email,
+              twitter: finalOutputs.twitter,
+              linkedin: finalOutputs.linkedin,
+              instagram: finalOutputs.instagram,
+              facebook: finalOutputs.facebook,
+              email: finalOutputs.email,
               tone: selectedTone
             });
         }
@@ -639,7 +723,9 @@ function OutputCard({ title, icon, content, type, copied, onCopy, onSchedule, de
         </div>
       </div>
       <div className="card-content">
-        <pre>{content || 'No content generated yet'}</pre>
+        {content ? content.split('\n').map((line, i) => (
+          <div key={i} style={{ marginBottom: line.trim() ? '8px' : '4px' }}>{line}</div>
+        )) : 'No content generated yet'}
       </div>
     </div>
   );

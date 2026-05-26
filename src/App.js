@@ -10,6 +10,8 @@ import History from './pages/History';
 import Analytics from './pages/Analytics';
 import ProtectedRoute from './components/ProtectedRoute';
 
+console.log('App.js loaded');
+
 function App() {
   return (
     <Router>
