@@ -12,14 +12,14 @@ function Pricing() {
       <div className="gradient-orb gradient-orb-3"></div>
       <Navbar />
 
-      <header className="header pricing-header">
-        <h1 className="pricing-title">Simple Pricing</h1>
+      <header className="header pricing-header" style={{ width: '100%', textAlign: 'center' }}>
+        <h1 className="pricing-title" style={{ fontSize: '2.5rem', textAlign: 'center', marginBottom: '1rem' }}>Simple Pricing</h1>
         <p className="pricing-subtitle">Choose the plan that fits your needs</p>
       </header>
 
       <main className="main">
-        <div className="pricing-section">
-          <div className="pricing-grid">
+        <div className="pricing-section" style={{ maxWidth: '1100px', margin: '0 auto', padding: '0 2rem' }}>
+          <div className="pricing-grid" style={{ display: 'flex', gap: '1.5rem', justifyContent: 'center', flexWrap: 'wrap' }}>
             <div className="pricing-card">
               <div className="pricing-card-header">
                 <h3 className="pricing-plan-name">Free</h3>

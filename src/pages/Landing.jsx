@@ -8,6 +8,14 @@ function Landing() {
   console.log('Landing component rendering');
   return (
     <div className="app">
+      <style>
+        {`
+          @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+          }
+        `}
+      </style>
       {/* <div className="gradient-orb gradient-orb-1"></div>
       <div className="gradient-orb gradient-orb-2"></div>
       <div className="gradient-orb gradient-orb-3"></div> */}
@@ -15,11 +23,18 @@ function Landing() {
 
       <header className="header">
         <div className="hero-section">
-          <h1 className="hero-title">
-            <span>Turn one post</span>
-            <br />
-            <span>into <span className="hero-accent">many</span>.</span>
-          </h1>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2rem', flexWrap: 'wrap' }}>
+            <h1 className="hero-title">
+              <span>Turn one post</span>
+              <br />
+              <span>into <span className="hero-accent">many</span>.</span>
+            </h1>
+            <img
+              src="/VoltBot.jpg"
+              alt="Volt mascot"
+              style={{ width: '150px', animation: 'float 3s ease-in-out infinite' }}
+            />
+          </div>
           <p className="hero-subtitle">AI-powered content repurposing for modern creators</p>
           <div className="hero-cta">
             <Link to="/auth" className="hero-button">Start Creating Free</Link>

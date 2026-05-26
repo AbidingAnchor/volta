@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import Navbar from '../components/Navbar';
@@ -27,6 +27,9 @@ function Dashboard() {
   const [brandVoice, setBrandVoice] = useState('');
   const [brandVoiceCollapsed, setBrandVoiceCollapsed] = useState(true);
   const [monthlyUsage, setMonthlyUsage] = useState(0);
+  const [mascotMood, setMascotMood] = useState('neutral');
+  const [toneTouched, setToneTouched] = useState(false);
+  const typingTimerRef = useRef(null);
   const [analyticsSummary, setAnalyticsSummary] = useState({
     bestPlatform: 'N/A',
     bestTone: 'N/A',
@@ -46,6 +49,61 @@ function Dashboard() {
     fetchMonthlyUsage();
     fetchAnalyticsSummary();
   }, []);
+
+  useEffect(() => {
+    return () => {
+      if (typingTimerRef.current) {
+        clearTimeout(typingTimerRef.current);
+      }
+    };
+  }, []);
+
+  const handleInputChange = (event) => {
+    setInputText(event.target.value);
+    setMascotMood('typing');
+
+    if (typingTimerRef.current) {
+      clearTimeout(typingTimerRef.current);
+    }
+
+    typingTimerRef.current = setTimeout(() => {
+      setMascotMood('neutral');
+    }, 900);
+  };
+
+  const handleToneSelect = (tone) => {
+    setSelectedTone(tone);
+    setToneTouched(true);
+    setMascotMood('neutral');
+  };
+
+  const getMascotConfig = () => {
+    if (loading) {
+      return { src: '/VoltThinking.png', animation: 'bounce', alt: 'Volt thinking' };
+    }
+
+    if (mascotMood === 'error') {
+      return { src: '/VoltSurprised.png', animation: 'float', alt: 'Volt surprised' };
+    }
+
+    if (mascotMood === 'success') {
+      return { src: '/VoltExcited.png', animation: 'bounce', alt: 'Volt excited' };
+    }
+
+    if (mascotMood === 'typing') {
+      return { src: '/VoltThinking.png', animation: 'float', alt: 'Volt thinking' };
+    }
+
+    if (toneTouched && selectedTone === 'Funny') {
+      return { src: '/VoltLaughing.png', animation: 'float', alt: 'Volt laughing' };
+    }
+
+    if (toneTouched && (selectedTone === 'Professional' || selectedTone === 'Inspirational')) {
+      return { src: '/VoltSerious.png', animation: 'float', alt: 'Volt serious' };
+    }
+
+    return { src: '/VoltNeutral.png', animation: 'float', alt: 'Volt mascot' };
+  };
 
   const fetchProfile = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -260,11 +318,13 @@ function Dashboard() {
 
     // Check if user has reached their monthly plan limit (skip for admin)
     if (!isAdmin && monthlyUsage >= usageLimit) {
+      setMascotMood('error');
       setShowUpgradeModal(true);
       return;
     }
 
     setLoading(true);
+    setMascotMood('typing');
     setOutputs({ twitter: '', linkedin: '', instagram: '', facebook: '', email: '' });
 
     try {
@@ -324,6 +384,7 @@ Return the response in this exact JSON format:
           const finalOutputs = parseRepurposeResponse(content);
           console.log('Parsed outputs:', finalOutputs);
           setOutputs(finalOutputs);
+          setMascotMood('success');
           setShowResults(true);
           
           // Save to content history
@@ -366,6 +427,7 @@ Return the response in this exact JSON format:
         const finalOutputs = parseRepurposeResponse(data);
         console.log('Parsed serverless outputs:', finalOutputs);
         setOutputs(finalOutputs);
+        setMascotMood('success');
         setShowResults(true);
         
         // Save to content history
@@ -398,6 +460,7 @@ Return the response in this exact JSON format:
       }
     } catch (error) {
       console.error('Error calling API:', error);
+      setMascotMood('error');
       alert('Error generating content. Please try again.');
     } finally {
       setLoading(false);
@@ -414,6 +477,8 @@ Return the response in this exact JSON format:
     setSelectedPost({ platform, content });
     setShowScheduleModal(true);
   };
+
+  const mascotConfig = getMascotConfig();
 
   const handleSaveSchedule = async () => {
     if (!scheduledDate || !scheduledTime) {
@@ -463,12 +528,13 @@ Return the response in this exact JSON format:
 
       <main className="main dashboard-main">
         <div className="input-section">
-          <div className="input-container">
+          <div className="dashboard-input-with-mascot" style={{ alignItems: 'center' }}>
+            <div className="input-container">
             <textarea
               className="input-textarea"
               placeholder="Paste your blog post or article here..."
               value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
+              onChange={handleInputChange}
               rows={8}
             />
             <div className="character-count">
@@ -500,25 +566,25 @@ Return the response in this exact JSON format:
             <div className="tone-selector">
               <button
                 className={`tone-button ${selectedTone === 'Professional' ? 'active' : ''}`}
-                onClick={() => setSelectedTone('Professional')}
+                onClick={() => handleToneSelect('Professional')}
               >
                 🎯 Professional
               </button>
               <button
                 className={`tone-button ${selectedTone === 'Casual' ? 'active' : ''}`}
-                onClick={() => setSelectedTone('Casual')}
+                onClick={() => handleToneSelect('Casual')}
               >
                 😎 Casual
               </button>
               <button
                 className={`tone-button ${selectedTone === 'Funny' ? 'active' : ''}`}
-                onClick={() => setSelectedTone('Funny')}
+                onClick={() => handleToneSelect('Funny')}
               >
                 😂 Funny
               </button>
               <button
                 className={`tone-button ${selectedTone === 'Inspirational' ? 'active' : ''}`}
-                onClick={() => setSelectedTone('Inspirational')}
+                onClick={() => handleToneSelect('Inspirational')}
               >
                 🔥 Inspirational
               </button>
@@ -537,6 +603,13 @@ Return the response in this exact JSON format:
                 '⚡ Repurpose Content'
               )}
             </button>
+            </div>
+            <img
+              className={`dashboard-volt-mascot ${mascotConfig.animation}`}
+              src={mascotConfig.src}
+              alt={mascotConfig.alt}
+              style={{ width: '250px', flexBasis: '250px', marginTop: 0 }}
+            />
           </div>
         </div>
 

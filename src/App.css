@@ -723,7 +723,7 @@
 }
 
 .dashboard-main {
-  max-width: 780px;
+  max-width: 980px;
   padding-top: 0;
   padding-bottom: 0;
   flex: none;
@@ -733,11 +733,63 @@
   margin-bottom: 3rem;
 }
 
+.dashboard-input-with-mascot {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 24px;
+  width: 100%;
+}
+
+.dashboard-input-with-mascot .input-container {
+  flex: 1 1 780px;
+  max-width: 780px;
+  min-width: 0;
+  margin: 0;
+}
+
+.dashboard-volt-mascot {
+  width: 150px;
+  flex: 0 0 150px;
+  object-fit: contain;
+  margin-top: 24px;
+  filter: drop-shadow(0 18px 32px rgba(0, 0, 0, 0.35));
+}
+
+.dashboard-volt-mascot.float {
+  animation: voltMascotFloat 3s ease-in-out infinite;
+}
+
+.dashboard-volt-mascot.bounce {
+  animation: voltMascotBounce 0.8s ease-in-out infinite;
+}
+
+@keyframes voltMascotFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes voltMascotBounce {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-14px) scale(1.04);
+  }
+}
+
 .performance-summary {
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 16px;
   padding: 24px;
+  max-width: 780px;
+  margin-left: auto;
+  margin-right: auto;
   margin-bottom: 0;
   backdrop-filter: blur(24px);
 }
@@ -1339,7 +1391,7 @@
 }
 
 .pricing-section {
-  max-width: 1200px;
+  max-width: 1100px;
   margin: 0 auto;
   padding: 2rem;
 }
@@ -1356,6 +1408,7 @@
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 12px;
   padding: 1.5rem;
+  min-width: 280px;
   transition: all 0.3s ease;
   position: relative;
 }
@@ -2752,6 +2805,20 @@
 
   .input-container {
     padding: 1.25rem;
+  }
+
+  .dashboard-input-with-mascot {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .dashboard-input-with-mascot .input-container {
+    flex-basis: auto;
+    width: 100%;
+  }
+
+  .dashboard-volt-mascot {
+    margin-top: 0;
   }
 
   .input-textarea {
