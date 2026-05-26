@@ -39,8 +39,8 @@ exports.handler = async (event) => {
             product_data: {
               name: plan === 'pro' ? 'Volta Pro Plan' : 'Volta Business Plan',
               description: plan === 'pro' 
-                ? 'Unlimited repurposes, advanced features' 
-                : 'Everything in Pro plus team collaboration',
+                ? '500 repurposes/month, advanced features' 
+                : '2000 repurposes/month plus team collaboration',
             },
             unit_amount: price,
           },

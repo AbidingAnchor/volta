@@ -26,8 +26,8 @@ function Pricing() {
                 <div className="pricing-price">$0<span className="pricing-period">/mo</span></div>
               </div>
               <ul className="pricing-features">
-                <li>5 repurposes/month</li>
-                <li>5 scheduled posts</li>
+                <li>20 repurposes/month</li>
+                <li>20 scheduled posts</li>
                 <li>1 brand voice</li>
                 <li>Basic analytics</li>
               </ul>
@@ -41,8 +41,8 @@ function Pricing() {
                 <div className="pricing-price">$29<span className="pricing-period">/mo</span></div>
               </div>
               <ul className="pricing-features">
-                <li>100 repurposes/month</li>
-                <li>Unlimited scheduling</li>
+                <li>500 repurposes/month</li>
+                <li>Advanced scheduling</li>
                 <li>5 brand voices</li>
                 <li>Advanced analytics</li>
                 <li>Priority support</li>
@@ -56,9 +56,9 @@ function Pricing() {
                 <div className="pricing-price">$79<span className="pricing-period">/mo</span></div>
               </div>
               <ul className="pricing-features">
-                <li>Unlimited repurposes</li>
-                <li>Unlimited scheduling</li>
-                <li>Unlimited brand voices</li>
+                <li>2000 repurposes/month</li>
+                <li>Advanced scheduling</li>
+                <li>Expanded brand voices</li>
                 <li>Team accounts (up to 5)</li>
                 <li>API access</li>
                 <li>DM automation</li>

@@ -32,6 +32,14 @@ function Dashboard() {
     bestTone: 'N/A',
     totalEngagement: 0
   });
+  const repurposeLimits = {
+    free: 20,
+    pro: 500,
+    business: 2000
+  };
+  const currentPlan = (profile?.plan || 'free').toLowerCase();
+  const usageLimit = repurposeLimits[currentPlan] || repurposeLimits.free;
+  const usagePercent = Math.min((monthlyUsage / usageLimit) * 100, 100);
 
   useEffect(() => {
     fetchProfile();
@@ -76,9 +84,6 @@ function Dashboard() {
       console.error('Error fetching monthly usage:', error);
     }
   };
-
-  const usageLimit = 10;
-  const usagePercent = Math.min((monthlyUsage / usageLimit) * 100, 100);
 
   const fetchAnalyticsSummary = async () => {
     try {
@@ -187,6 +192,23 @@ function Dashboard() {
     return candidate;
   };
 
+  const cleanTwitterThread = (content) => {
+    const text = stringifyOutput(content)
+      .replace(/\\n/g, '\n')
+      .replace(/\\"/g, '"')
+      .trim();
+    const tweetStart = text.search(/Tweet\s*1\s*:/i);
+
+    if (tweetStart === -1) return text;
+
+    return text
+      .slice(tweetStart)
+      .replace(/^Tweet\s*1\s*:/i, 'Tweet 1:')
+      .replace(/\n?\s*["',}]*\s*(linkedin|instagram|facebook|email)"?\s*:\s*[\s\S]*$/i, '')
+      .replace(/\n\s*["'}\]]+\s*$/g, '')
+      .trim();
+  };
+
   const parseRepurposeResponse = (rawResponse) => {
     const rawText = typeof rawResponse === 'string'
       ? rawResponse
@@ -215,7 +237,7 @@ function Dashboard() {
 
     const normalized = normalizeParsedOutputs(parsed);
     const fallback = {
-      twitter: normalized.twitter || extractPlatformContent(rawText, 'twitter') || extractPlatformContent(rawText, 'x'),
+      twitter: cleanTwitterThread(normalized.twitter || extractPlatformContent(rawText, 'twitter') || extractPlatformContent(rawText, 'x')),
       linkedin: normalized.linkedin || extractPlatformContent(rawText, 'linkedin'),
       instagram: normalized.instagram || extractPlatformContent(rawText, 'instagram'),
       facebook: normalized.facebook || extractPlatformContent(rawText, 'facebook'),
@@ -223,7 +245,7 @@ function Dashboard() {
     };
 
     if (!Object.values(fallback).some(Boolean)) {
-      fallback.twitter = rawText.trim();
+      fallback.twitter = cleanTwitterThread(rawText);
     }
 
     return fallback;
@@ -236,8 +258,8 @@ function Dashboard() {
     const { data: { user } } = await supabase.auth.getUser();
     const isAdmin = user?.email === 'drewnegron95@gmail.com';
 
-    // Check if free plan user has reached limit (skip for admin)
-    if (!isAdmin && profile?.plan === 'free' && profile?.repurpose_count >= 5) {
+    // Check if user has reached their monthly plan limit (skip for admin)
+    if (!isAdmin && monthlyUsage >= usageLimit) {
       setShowUpgradeModal(true);
       return;
     }
@@ -620,8 +642,8 @@ Return the response in this exact JSON format:
               <h2>⚡ Upgrade Required</h2>
             </div>
             <div className="modal-body">
-              <p>You've used all 5 of your free monthly repurposes.</p>
-              <p>Upgrade to Pro for unlimited repurposes and more features!</p>
+              <p>You've used all {usageLimit} of your monthly repurposes.</p>
+              <p>Upgrade your plan for a higher monthly repurpose limit.</p>
             </div>
             <div className="modal-footer">
               <button onClick={() => setShowUpgradeModal(false)} className="modal-button secondary">
