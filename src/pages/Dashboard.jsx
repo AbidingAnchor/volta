@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 import '../App.css';
 
 function Dashboard() {
-  const navigate = useNavigate();
   const [inputText, setInputText] = useState('');
   const [loading, setLoading] = useState(false);
   const [outputs, setOutputs] = useState({
@@ -25,9 +26,17 @@ function Dashboard() {
   const [selectedTone, setSelectedTone] = useState('Inspirational');
   const [brandVoice, setBrandVoice] = useState('');
   const [brandVoiceCollapsed, setBrandVoiceCollapsed] = useState(true);
+  const [monthlyUsage, setMonthlyUsage] = useState(0);
+  const [analyticsSummary, setAnalyticsSummary] = useState({
+    bestPlatform: 'N/A',
+    bestTone: 'N/A',
+    totalEngagement: 0
+  });
 
   useEffect(() => {
     fetchProfile();
+    fetchMonthlyUsage();
+    fetchAnalyticsSummary();
   }, []);
 
   const fetchProfile = async () => {
@@ -44,9 +53,73 @@ function Dashboard() {
     }
   };
 
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    navigate('/auth');
+  const fetchMonthlyUsage = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const now = new Date();
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      const nextMonthStart = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+
+      const { count, error } = await supabase
+        .from('content_history')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .gte('created_at', monthStart.toISOString())
+        .lt('created_at', nextMonthStart.toISOString());
+
+      if (error) throw error;
+
+      setMonthlyUsage(count || 0);
+    } catch (error) {
+      console.error('Error fetching monthly usage:', error);
+    }
+  };
+
+  const usageLimit = 10;
+  const usagePercent = Math.min((monthlyUsage / usageLimit) * 100, 100);
+
+  const fetchAnalyticsSummary = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('post_analytics')
+        .select('platform,tone,likes,comments,shares,views')
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      const platformStats = {};
+      const toneStats = {};
+      let totalEngagement = 0;
+
+      (data || []).forEach(post => {
+        const engagement = (post.likes || 0) + (post.comments || 0) + (post.shares || 0) + (post.views || 0);
+        totalEngagement += engagement;
+
+        if (post.platform) {
+          platformStats[post.platform] = (platformStats[post.platform] || 0) + engagement;
+        }
+
+        if (post.tone) {
+          toneStats[post.tone] = (toneStats[post.tone] || 0) + engagement;
+        }
+      });
+
+      const bestPlatform = Object.entries(platformStats).sort((a, b) => b[1] - a[1])[0]?.[0] || 'N/A';
+      const bestTone = Object.entries(toneStats).sort((a, b) => b[1] - a[1])[0]?.[0] || 'N/A';
+
+      setAnalyticsSummary({
+        bestPlatform,
+        bestTone,
+        totalEngagement
+      });
+    } catch (error) {
+      console.error('Error fetching analytics summary:', error);
+    }
   };
 
   const handleRepurpose = async () => {
@@ -215,6 +288,7 @@ Return the response in this exact JSON format:
           .update({ repurpose_count: (profile?.repurpose_count || 0) + 1 })
           .eq('id', user.id);
         fetchProfile();
+        fetchMonthlyUsage();
       }
     } catch (error) {
       console.error('Error calling API:', error);
@@ -263,39 +337,25 @@ Return the response in this exact JSON format:
   };
 
   return (
-    <div className="app">
-      <div className="noise-overlay"></div>
-      <div className="grid-mesh"></div>
-      <div className="stars"></div>
+    <div className="app" style={{ minHeight: 'auto', paddingBottom: '40px' }}>
       <div className="gradient-orb gradient-orb-1"></div>
       <div className="gradient-orb gradient-orb-2"></div>
       <div className="gradient-orb gradient-orb-3"></div>
-      <nav className="navbar">
-        <div className="nav-logo">
-          <Link to="/">
-            <span className="nav-logo-icon">⚡</span>
-            <span className="nav-logo-text">Volta</span>
-          </Link>
-        </div>
-        <div className="nav-links">
-          <div className="user-info">
-            <span className="user-name">{profile?.full_name || 'User'}</span>
-            <span className={`user-plan ${profile?.plan}`}>{profile?.plan || 'free'}</span>
-          </div>
-          <Link to="/calendar" className="nav-link">Calendar</Link>
-          <Link to="/history" className="nav-link">History</Link>
-          <Link to="/pricing" className="nav-link">Pricing</Link>
-          <button onClick={handleSignOut} className="nav-link">Sign Out</button>
-        </div>
-      </nav>
+      <Navbar />
 
-      <header className="header">
+      <header className="header dashboard-header">
+        <div className="dashboard-usage-pill">
+          <span>{monthlyUsage}/{usageLimit} repurposes used this month</span>
+          <div className="dashboard-usage-bar">
+            <div className="dashboard-usage-fill" style={{ width: `${usagePercent}%` }}></div>
+          </div>
+        </div>
         <h1 className="dashboard-greeting">What are we creating today?</h1>
       </header>
 
       <div className="frosted-divider"></div>
 
-      <main className="main">
+      <main className="main dashboard-main">
         <div className="input-section">
           <div className="input-container">
             <textarea
@@ -374,6 +434,24 @@ Return the response in this exact JSON format:
           </div>
         </div>
 
+        <section className="performance-summary">
+          <h2 className="performance-title">Your Performance</h2>
+          <div className="performance-grid">
+            <div className="performance-stat-card">
+              <div className="performance-stat-label">Best Platform</div>
+              <div className="performance-stat-value">{analyticsSummary.bestPlatform}</div>
+            </div>
+            <div className="performance-stat-card">
+              <div className="performance-stat-label">Best Tone</div>
+              <div className="performance-stat-value">{analyticsSummary.bestTone}</div>
+            </div>
+            <div className="performance-stat-card">
+              <div className="performance-stat-label">Total Engagement</div>
+              <div className="performance-stat-value">{analyticsSummary.totalEngagement.toLocaleString()}</div>
+            </div>
+          </div>
+        </section>
+
         {loading ? (
           <>
             <div className="divider"></div>
@@ -449,6 +527,7 @@ Return the response in this exact JSON format:
           </>
         ) : null}
       </main>
+      <Footer />
 
       {showUpgradeModal && (
         <div className="modal-overlay" onClick={() => setShowUpgradeModal(false)}>

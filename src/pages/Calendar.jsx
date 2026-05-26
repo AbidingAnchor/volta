@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 import '../App.css';
 
 function Calendar() {
@@ -203,25 +204,10 @@ function Calendar() {
 
   return (
     <div className="calendar-page">
-      <div className="noise-overlay"></div>
-      <div className="grid-mesh"></div>
-      <div className="stars"></div>
       <div className="gradient-orb gradient-orb-1"></div>
       <div className="gradient-orb gradient-orb-2"></div>
       <div className="gradient-orb gradient-orb-3"></div>
-      <nav className="nav">
-        <div className="nav-logo">
-          <Link to="/dashboard">
-            <span className="nav-logo-icon">⚡</span>
-            <span className="nav-logo-text">Volta</span>
-          </Link>
-        </div>
-        <div className="nav-links">
-          <Link to="/dashboard" className="nav-link">Dashboard</Link>
-          <Link to="/calendar" className="nav-link active">Calendar</Link>
-          <Link to="/pricing" className="nav-link">Pricing</Link>
-        </div>
-      </nav>
+      <Navbar />
 
       <main className="calendar-main">
         <div className="calendar-container">
@@ -371,6 +357,7 @@ function Calendar() {
           </div>
         )}
       </main>
+      <Footer />
     </div>
   );
 }

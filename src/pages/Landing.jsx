@@ -1,33 +1,23 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 import '../App.css';
 
 function Landing() {
   return (
     <div className="app">
-      <div className="noise-overlay"></div>
-      <div className="grid-mesh"></div>
-      <div className="stars"></div>
       <div className="gradient-orb gradient-orb-1"></div>
       <div className="gradient-orb gradient-orb-2"></div>
       <div className="gradient-orb gradient-orb-3"></div>
-      <nav className="navbar">
-        <div className="nav-logo">
-          <span className="nav-logo-icon">⚡</span>
-          <span className="nav-logo-text">Volta</span>
-        </div>
-        <div className="nav-links">
-          <Link to="/pricing" className="nav-link">Pricing</Link>
-          <Link to="/auth" className="nav-link">Sign In</Link>
-        </div>
-      </nav>
+      <Navbar />
 
       <header className="header">
         <div className="hero-section">
           <h1 className="hero-title">
-            <span className="gradient-text">Turn one post</span>
+            <span>Turn one post</span>
             <br />
-            <span className="gradient-text">into many.</span>
+            <span>into <span className="hero-accent">many</span>.</span>
           </h1>
           <p className="hero-subtitle">AI-powered content repurposing for modern creators</p>
           <div className="hero-cta">
@@ -158,22 +148,7 @@ function Landing() {
         </div>
       </main>
 
-      <footer className="footer">
-        <div className="footer-content">
-          <div className="footer-logo">
-            <span className="nav-logo-icon">⚡</span>
-            <span className="nav-logo-text">Volta</span>
-          </div>
-          <div className="footer-links">
-            <Link to="/privacy" className="footer-link">Privacy Policy</Link>
-            <Link to="/terms" className="footer-link">Terms of Service</Link>
-            <Link to="/contact" className="footer-link">Contact</Link>
-          </div>
-          <div className="footer-copyright">
-            Copyright 2026 Volta. All rights reserved.
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

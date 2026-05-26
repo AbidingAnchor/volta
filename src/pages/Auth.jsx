@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 import '../App.css';
 
 function Auth() {
@@ -49,12 +51,9 @@ function Auth() {
 
   return (
     <div className="auth-page">
-      <div className="noise-overlay"></div>
-      <div className="grid-mesh"></div>
-      <div className="stars"></div>
       <div className="gradient-orb gradient-orb-1"></div>
-      <div className="gradient-orb gradient-orb-2"></div>
-      <div className="gradient-orb gradient-orb-3"></div>
+      <div className="auth-orb-secondary"></div>
+      <Navbar />
       
       <div className="auth-wrapper">
         <div className="auth-card">
@@ -63,7 +62,7 @@ function Auth() {
               <span className="auth-logo-icon">⚡</span>
               <span className="auth-logo-text">Volta</span>
             </div>
-            <p className="auth-subtitle">{isLogin ? 'Welcome back' : 'Create your account'}</p>
+            <h1 className="auth-title">{isLogin ? 'Welcome back' : 'Create your account'}</h1>
           </div>
 
           <div className="auth-tabs">
@@ -121,7 +120,7 @@ function Auth() {
                 id="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
+                placeholder="Enter your password"
                 required
               />
             </div>
@@ -136,19 +135,6 @@ function Auth() {
                 isLogin ? 'Sign In' : 'Create Account'
               )}
             </button>
-
-            <div className="auth-divider">
-              <span>or continue with</span>
-            </div>
-
-            <div className="social-auth">
-              <button type="button" className="social-button">
-                <span>🔵</span> Google
-              </button>
-              <button type="button" className="social-button">
-                <span>🐙</span> GitHub
-              </button>
-            </div>
           </form>
 
           <p className="auth-switch">
@@ -159,6 +145,7 @@ function Auth() {
           </p>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }
